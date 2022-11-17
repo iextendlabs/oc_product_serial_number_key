@@ -1,0 +1,102 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <div class="pull-right">
+        <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+      <h1>{{ apply_serial_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+        <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="container-fluid">
+    {% if error_warning %}
+    <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+
+     {% if success %}
+    <div class="alert alert-success alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ success }}
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+    </div>
+    {% endif %}
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-pencil"></i> {{ text_edit_serial }} <b>(Order #{{ order_id }})</b></h3>
+      </div>
+      <div class="panel-body">
+        <form action="{{ action }}" method="post" enctype="multipart/form-data" id="form-module" class="form-horizontal">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th class="text-center" style="width:15%">Order Quantity</th>
+                <th>Serial Number(s)</th>
+              </tr>
+            </thead>
+           
+            <tbody>
+              {% if products %}
+
+                {% for product in products %}
+                  <tr {% if error_products and error_products[product.order_product_id ] %} class="text-danger" {% endif %}  >
+                    <td>{{ product.name }} </td>
+                    <td class="text-center">{{ product.quantity }}</td>
+                    <input type="hidden" name="product_quantity[{{ product.order_product_id }}]" value="{{ product.quantity }}">
+                    <td><textarea   name="product_serial[{{ product.order_product_id }}]" placeholder="Product Serial" id="{{ product.order_product_id }}" data-quantity="{{ product.quantity }}" data-serials="{{ product.serials }}" rows="5" class="form-control" 
+                      {% if product.require_serial != 1 %} readonly="" {% endif %}
+                        >{% if product.serial is not empty %}{{ product.serial }}{% endif %}</textarea>
+
+                      {% if error_products and error_products[product.order_product_id ] %} <br>Serials Should Match Quantity {{ product.quantity }}   {% endif %}
+
+                      {% if show_warning == 1 %}
+
+                        <p class="text-warning"> 
+                          {% if warning and warning[product.order_product_id] %} 
+                            Serials not matched but saved
+                          {% endif %}
+                        </p> 
+
+                        <p class="text-danger"> 
+                        {% if warning_serials and warning_serials[product.order_product_id] %}
+                          {{ '<b>Mismatch serials:</b> (' }}
+                            {% for warning_serial in warning_serials[product.order_product_id]  %}
+                                  {{ warning_serial }}{% if not loop.last %}{{ ',' }}{% endif %}
+                            {% endfor %} 
+                          {{ ')' }}
+                        {% endif %} 
+                        </p> 
+
+                      {% endif %}
+
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                  <td colspan="3">{{ 'No order found' }}</td>
+                </tr>
+              {% endif %}
+
+            </tbody>
+          </table>
+          {% if products is not empty %}
+            <div class="pull-right disable_submit" style="display:none">
+              <button type="button" class="btn btn-primary disabled">Save</button>
+            </div>
+            <div class="pull-right submit_btn">
+              <input type="submit" form="form-module" data-toggle="tooltip" title="save" class="btn btn-primary" value="Save">
+            </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ footer }}

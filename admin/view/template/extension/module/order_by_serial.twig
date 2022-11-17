@@ -1,0 +1,144 @@
+{{ header }}{{ column_left }}
+<div id="content">
+    <div class="page-header">
+        <div class="container-fluid">
+            <div class="pull-right">
+                <a href="{{ cancel }}" data-toggle="tooltip" title="{{ button_cancel }}" class="btn btn-default"><i class="fa fa-reply"></i></a></div>
+            <h1>{{ find_order_by_serial_title }}</h1>
+            <ul class="breadcrumb">
+                {% for breadcrumb in breadcrumbs %}
+                <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="container-fluid">
+        {% if error_warning %}
+        <div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> {{ error_warning }}
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+        {% endif %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">{{ find_order_by_serial_title }}</h3>
+            </div>
+            <div class="panel-body">
+                <form action="{{ action }}" method="post" id="form-module" class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="input-order-serial">{{ serial_number_label }}</label>
+                        <div class="col-sm-10">
+                            <input type="text" name="filter_order_serial" value="{{ filter_order_serial }}" placeholder="{{ enter_serial }}" id="input-order-serial" class="form-control" required="" />
+                        </div>
+                    </div>
+                    <div class="pull-right">
+                        <input type="submit" form="form-module" data-toggle="tooltip" title="find" class="btn btn-primary" value="Find">
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- search result -->
+        {% if orders %}
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-list"></i> {{ text_search_list }}</h3>
+            </div>
+            <div class="panel-body">
+                <form method="post" action="{{ action }}" enctype="multipart/form-data" id="form-order">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <td class="text-right">{{ column_order_id }}</td>
+                                    <td class="text-left">{{ column_customer }}</td>
+                                    <td class="text-left">{{ column_status }}</td>
+                                    <td class="text-right">{{ column_total }}</td>
+                                    <td class="text-left">{{ column_date_added }}</td>
+                                    <td class="text-left">{{ column_date_modified }}</td>
+                                    <td class="text-right">{{ column_action }}</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                {% for order in orders %}
+                                <tr>
+
+                                    <td class="text-right">{{ order.order_id }}</td>
+                                    <td class="text-left">{{ order.firstname }} {{ order.lastname }}</td>
+                                    <td class="text-left">{{ order.order_status }}</td>
+                                    <td class="text-right">{{ order.total }}</td>
+                                    <td class="text-left">{{ order.date_added }}</td>
+                                    <td class="text-left">{{ order.date_modified }}</td>
+                                    <td class="text-right">
+                                        <div style="min-width: 120px;">
+                                            <div class="btn-group"> <a href="{{ add_serial_url }}&filter_order={{ order.order_id }}" data-toggle="tooltip" title="add serial" class="btn btn-primary">Add Serial</a>
+                                                {% if not restricted_view %}
+                                                <a href="{{ order_view_url }}" data-toggle="tooltip" title="{{ button_view }}" class="btn btn-primary"><i class="fa fa-eye"></i></a>
+                                                <button type="button" data-toggle="dropdown" class="btn btn-primary dropdown-toggle"><span class="caret"></span></button>
+                                                <ul class="dropdown-menu dropdown-menu-right">
+                                                    <li><a href="{{ order_edit_url }}"><i class="fa fa-pencil"></i> {{ button_edit }}</a></li>
+                                                    <li><a href="{{ order.order_id }}"><i class="fa fa-trash-o"></i> {{ button_delete }}</a></li>
+                                                </ul>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                <div class="row">
+                    <div class="col-sm-6 text-left">{{ pagination }}</div>
+                    <div class="col-sm-6 text-right">{{ results }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if no_result %}
+        <div class="well well-sm">{{ no_result }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#form-order li:last-child a').on('click', function(e) {
+        e.preventDefault();
+
+        var element = this;
+
+        if (confirm('{{ text_confirm }}')) {
+            $.ajax({
+                url: '{{ catalog }}index.php?route=api/order/delete&api_token={{ api_token }}&store_id={{ store_id }}&order_id=' + $(element).attr('href'),
+                dataType: 'json',
+                beforeSend: function() {
+                    $(element).parent().parent().parent().find('button').button('loading');
+                },
+                complete: function() {
+                    $(element).parent().parent().parent().find('button').button('reset');
+                },
+                success: function(json) {
+                    $('.alert-dismissible').remove();
+
+                    if (json['error']) {
+                        $('#content > .container-fluid').prepend('<div class="alert alert-danger alert-dismissible"><i class="fa fa-exclamation-circle"></i> ' + json['error'] + ' <button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+                    }
+
+                    if (json['success']) {
+                        location = '{{ delete }}';
+                    }
+                },
+                error: function(xhr, ajaxOptions, thrownError) {
+                    alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+                }
+            });
+        }
+    });
+
+</script>
+{{ footer }}
